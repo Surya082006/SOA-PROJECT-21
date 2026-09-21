@@ -6,6 +6,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "loans")
 public class Loan {
@@ -17,15 +19,22 @@ public class Loan {
     private Long userId;
     private Long bookId;
 
+    private LocalDate issueDate;
+    private LocalDate returnDate;
+
     private String status;
+
+    private Double fineAmount;
 
     public Loan() {
     }
 
-    public Loan(Long loanId, Long userId, Long bookId, String status) {
+    public Loan(Long loanId, Long userId, Long bookId, LocalDate issueDate, LocalDate returnDate, String status) {
         this.loanId = loanId;
         this.userId = userId;
         this.bookId = bookId;
+        this.issueDate = issueDate;
+        this.returnDate = returnDate;
         this.status = status;
     }
 
@@ -53,11 +62,35 @@ public class Loan {
         this.bookId = bookId;
     }
 
+    public LocalDate getIssueDate() {
+        return issueDate;
+    }
+
+    public void setIssueDate(LocalDate issueDate) {
+        this.issueDate = issueDate;
+    }
+
+    public LocalDate getReturnDate() {
+        return returnDate;
+    }
+
+    public void setReturnDate(LocalDate returnDate) {
+        this.returnDate = returnDate;
+    }
+
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Double getFineAmount() {
+        return fineAmount;
+    }
+
+    public void setFineAmount(Double fineAmount) {
+        this.fineAmount = fineAmount;
     }
 }

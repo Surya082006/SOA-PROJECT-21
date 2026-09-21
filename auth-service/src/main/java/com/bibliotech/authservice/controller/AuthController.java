@@ -16,14 +16,21 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 public class AuthController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtUtil jwtUtil;
+    AuthController(UserRepository userRepository, 
+                   PasswordEncoder passwordEncoder, 
+                   JwtUtil jwtUtil, 
+                   @Autowired(required = false) org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
@@ -36,7 +43,21 @@ public class AuthController {
                 passwordEncoder.encode(request.getPassword()),
                 role
         );
-        userRepository.save(user);
+        user = userRepository.save(user);
+
+        if (jdbcTemplate != null) {
+            try {
+                jdbcTemplate.update(
+                    "INSERT INTO users (user_id, email, name) VALUES (?, ?, ?) ON CONFLICT (user_id) DO NOTHING",
+                    user.getUserId(),
+                    user.getUsername(),
+                    user.getUsername()
+                );
+                jdbcTemplate.execute("SELECT setval('users_user_id_seq', (SELECT GREATEST(MAX(user_id), 1) FROM users))");
+            } catch (Exception ignored) {
+            }
+        }
+
         return ResponseEntity.ok("User registered successfully");
     }
 
@@ -49,7 +70,7 @@ public class AuthController {
             return ResponseEntity.status(401).body("Invalid username or password");
         }
 
-        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
-        return ResponseEntity.ok(new AuthResponse(token));
+        String token = jwtUtil.generateToken(user.getUserId(), user.getUsername(), user.getRole().name());
+        return ResponseEntity.ok(new AuthResponse(token, user.getUserId(), user.getUsername(), user.getRole().name()));
     }
 }

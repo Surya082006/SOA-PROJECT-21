@@ -3,7 +3,7 @@ package com.bibliotech.authservice.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "users")
+@Table(name = "auth_users")
 public class User {
 
     @Id

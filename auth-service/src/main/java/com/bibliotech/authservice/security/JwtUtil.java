@@ -31,15 +31,24 @@ public class JwtUtil {
     }
 
     public String generateToken(String username, String role) {
+        return generateToken(null, username, role);
+    }
+
+    public String generateToken(Long userId, String username, String role) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
 
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .setSubject(username)
                 .claim("role", role)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
-                .signWith(getKey(), SignatureAlgorithm.HS256)
-                .compact();
+                .signWith(getKey(), SignatureAlgorithm.HS256);
+
+        if (userId != null) {
+            builder.claim("userId", userId);
+        }
+
+        return builder.compact();
     }
 }

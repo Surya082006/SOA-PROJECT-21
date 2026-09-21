@@ -3,8 +3,6 @@ package com.bibliotech.fineservice.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -23,12 +21,18 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Anyone with a valid token can read fine info
-                .requestMatchers("/fines/calculate").hasAnyRole("STUDENT", "LIBRARIAN")
-                .requestMatchers("/fines/**").hasAnyRole("STUDENT", "LIBRARIAN")
-                // Only librarians can mark a fine as paid
+                // Only librarians can mark a fine as paid (must be declared before generic /fines/**)
                 .requestMatchers("/fines/*/pay").hasRole("LIBRARIAN")
+                // Inter-service fine calculation and general fine queries
+                .requestMatchers("/fines/**").hasAnyRole("STUDENT", "LIBRARIAN")
+                .requestMatchers("/error").permitAll()
                 .anyRequest().authenticated()
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) ->
+                    response.sendError(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
+                .accessDeniedHandler((request, response, accessDeniedException) ->
+                    response.sendError(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN, "Forbidden"))
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

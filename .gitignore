@@ -1,4 +1,22 @@
-.metadata/ 
-.settings/ 
-.classpath 
-.project 
+# Maven build output
+target/
+**/target/
+*.class
+*.jar
+*.war
+
+# Eclipse & IDE metadata
+.metadata/
+.settings/
+.classpath
+.project
+bin/
+.idea/
+*.iml
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+logs/

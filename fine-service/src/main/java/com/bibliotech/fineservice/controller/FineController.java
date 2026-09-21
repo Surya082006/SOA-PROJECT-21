@@ -43,6 +43,11 @@ public class FineController {
         return ResponseEntity.ok(saved);
     }
 
+    @GetMapping
+    public ResponseEntity<List<Fine>> getAllFines() {
+        return ResponseEntity.ok(fineRepository.findAll());
+    }
+
     @GetMapping("/{fineId}")
     public ResponseEntity<Fine> getFine(@PathVariable Long fineId) {
         return fineRepository.findById(fineId)

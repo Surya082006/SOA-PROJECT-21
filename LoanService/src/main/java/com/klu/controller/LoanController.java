@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.klu.dto.OverdueLoanResponse;
 import com.klu.entity.Loan;
+import com.klu.service.LoanNotificationService;
 import com.klu.service.LoanService;
 
 @RestController
@@ -20,18 +22,19 @@ import com.klu.service.LoanService;
 public class LoanController {
 
     private final LoanService service;
+    private final LoanNotificationService notificationService;
 
-    public LoanController(LoanService service) {
+    public LoanController(LoanService service, LoanNotificationService notificationService) {
         this.service = service;
+        this.notificationService = notificationService;
     }
 
     // ==========================================
-    // CREATE LOAN
+    // CREATE LOAN / BORROW BOOK
     // ==========================================
 
     @PostMapping
     public Loan createLoan(@RequestBody Loan loan) {
-
         return service.createLoan(loan);
     }
 
@@ -41,8 +44,26 @@ public class LoanController {
 
     @GetMapping
     public List<Loan> getAllLoans() {
-
         return service.getAllLoans();
+    }
+
+    // ==========================================
+    // OVERDUE TRACKING (Must come before /{id})
+    // ==========================================
+
+    @GetMapping("/overdue")
+    public List<OverdueLoanResponse> getOverdueLoans() {
+        return service.getOverdueLoans();
+    }
+
+    // ==========================================
+    // TRIGGER OVERDUE NOTIFICATIONS
+    // ==========================================
+
+    @PostMapping("/overdue/notify")
+    public ResponseEntity<List<String>> triggerOverdueNotifications() {
+        List<String> notifications = notificationService.sendOverdueNotifications();
+        return ResponseEntity.ok(notifications);
     }
 
     // ==========================================
@@ -51,7 +72,6 @@ public class LoanController {
 
     @GetMapping("/{id}")
     public Loan getLoanById(@PathVariable Long id) {
-
         return service.getLoanById(id);
     }
 
@@ -60,9 +80,7 @@ public class LoanController {
     // ==========================================
 
     @GetMapping("/user/{userId}")
-    public List<Loan> getLoansByUser(
-            @PathVariable Long userId) {
-
+    public List<Loan> getLoansByUser(@PathVariable Long userId) {
         return service.getLoansByUser(userId);
     }
 
@@ -71,9 +89,7 @@ public class LoanController {
     // ==========================================
 
     @GetMapping("/book/{bookId}")
-    public List<Loan> getLoansByBook(
-            @PathVariable Long bookId) {
-
+    public List<Loan> getLoansByBook(@PathVariable Long bookId) {
         return service.getLoansByBook(bookId);
     }
 
@@ -83,7 +99,6 @@ public class LoanController {
 
     @PutMapping("/{id}/return")
     public Loan returnBook(@PathVariable Long id) {
-
         return service.returnBook(id);
     }
 
@@ -92,13 +107,8 @@ public class LoanController {
     // ==========================================
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteLoan(
-            @PathVariable Long id) {
-
+    public ResponseEntity<String> deleteLoan(@PathVariable Long id) {
         service.deleteLoan(id);
-
-        return ResponseEntity.ok(
-                "Loan deleted successfully"
-        );
+        return ResponseEntity.ok("Loan deleted successfully");
     }
 }
